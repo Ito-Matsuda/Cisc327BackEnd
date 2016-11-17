@@ -4,8 +4,6 @@ import java.util.Arrays;
 /*
  * Negative numbers in an array signify an account does not exist
  * TODO Still need to make sure that backend updates all the sthuff
- * Need to create a new Master accounts file
- * and create a new valid account list
  */
 public class BackEnd {
 	static BufferedReader reader;
@@ -13,6 +11,10 @@ public class BackEnd {
 	// Two arrays, one for account balance, and one for account name. The index of the array is the account number.
 	private static int[] accountBalance = new int[99999999];
 	private static String[] accountNameList = new String[99999999];
+	private static String mtsfName;
+	private static String oldMaster;
+	private static String newMaster;
+	private static String newValAccounts;
 	
 	public static void main(String[] args) {
 		// Make it so that all arrays have a -1? does this even work
@@ -20,15 +22,46 @@ public class BackEnd {
 		// becomes negative ones
 		// DANGEROUS FILLING IT HERE???
 		Arrays.fill(accountBalance, -1);
+		// Update our global variables
+		mtsfName = args[0];
+		oldMaster = args[1];
+		newMaster = args[2];
+		newValAccounts = args[3];
+		readMAFLine(oldMaster); // Read in the old master file to update our arrays
+		readMTSF(mtsfName); // Read in the merged transaction file
+		
 	} // End main
 	
-	
+	/**
+	 * Read in merged Transaction summary file line by line
+	 * Moves control to the redirect function after reading in a single line
+	 */
+	public static void readMTSF(String fileName){
+		BufferedReader br = null;
+		try {
+			String currentLine;
+			br = new BufferedReader(new FileReader(fileName)); // Imports
+																// MTSF file
+			while ((currentLine = br.readLine()) != null) { // takes the current
+					redirect(currentLine); // Bring it to the other function that is our road map
+			} // end while
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (br != null)
+					br.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} // close it
+	}
 
 	// Creates an empty text file to be used as the new valid accounts list
 	public static void createText() {
 		{
 			try {
-				File file = new File("accounts.txt");
+				File file = new File(newValAccounts);
 				if (file.createNewFile()) {
 					// System.out.println("File is created!");
 				} else {
@@ -64,20 +97,19 @@ public class BackEnd {
 	public static void currentAccounts(){ // will write to our accounts
 		for(int i=10000000; i < 99999999; i++){
 			if (accountBalance[i] >=0){ // ie) if there exists an account
-				writeToFile(Integer.toString(i),"accounts.txt");
+				writeToFile(Integer.toString(i),newValAccounts);
 			}
 		}
 	}
 	
 	/**
 	 * Generates our new Master accounts file 
-	 * Should be called in a loop?
 	 */
 	public static void newMAF(){
-		writeToFile("","masterAccountsFile.txt");
+		writeToFile("",newMaster);
 		for(int i = 10000000; i < 99999999; i++){
 			if(accountBalance[i] >=0){
-				writeToFile(createMAFLine(i,accountBalance[i],accountNameList[i]),"masterAccountsFile.txt");
+				writeToFile(createMAFLine(i,accountBalance[i],accountNameList[i]),newMaster);
 			}
 		} // Read array to make our new master account file 
 	}
@@ -135,38 +167,11 @@ public class BackEnd {
 	public static boolean checkAccount(int accountNum){
 		return false;
 	}
-	
-	
-	/**
-	 * Searches for specific account number in master accounts file
-	 * @param fileName
-	 */
-//	public static boolean searchFile(String fileName, int accountNumber) {
-//		BufferedReader br = null;
-//		try {
-//			String currentLine;
-//			br = new BufferedReader(new FileReader(fileName)); // Imports
-//																// accounts file
-//			while ((currentLine = br.readLine()) != null) { // takes the current
-//					String[] tokens = currentLine.split(" ");
-//					if (Integer.parseInt(tokens[0]) == accountNumber){
-//						return true;
-//					}
-//			} // end while
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		} finally {
-//			try {
-//				if (br != null)
-//					br.close();
-//			} catch (IOException e) {
-//				e.printStackTrace();
-//			}
-//		} // close it
-//		return false;
-//	} // End readMTSF
 
-	// Redirects based on the first two accounts read
+	/**
+	 * Redirects based on the first two accounts read
+	 * @param transaction
+	 */
 	public static void redirect(String transaction) {
 		if (transaction.substring(0, 1).equals("DE")) {
 			deposit(transaction.substring(3), 0); // begin from the number not
@@ -183,12 +188,11 @@ public class BackEnd {
 	} // End redirect
 
 	/**
-	 * CHECKING FOR ERRORS IS DONE ELSEWHERE !!!!
-	 * 
+	 * Handles deposit
 	 * @param deposit
+	 * @param whichAccount
+	 * @return
 	 */
-
-	// Handles things for deposits
 	public static boolean deposit(String deposit, int whichAccount) {
 		// Turns values from TSF line into integers
 		int tsfArray[] = str2Data(deposit);
@@ -264,7 +268,7 @@ public class BackEnd {
 	}// End transfer
 
 	/**
-	 * Handles things for create Have to update thingamajiger
+	 * Handles things for create
 	 * @param create
 	 */
 	public static void create(String create) {
@@ -280,7 +284,11 @@ public class BackEnd {
 		}
 	}// End create
 
-	// Converts our strings into integer values in an array
+	/** 
+	 * Converts our strings into integer values in an array
+	 * @param transactionLine
+	 * @return
+	 */
 	public static int[] str2Data(String transactionLine) {
 		// Make an array to store the elements
 		int transactionValues[] = new int[3];
