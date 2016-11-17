@@ -3,7 +3,9 @@ import java.util.Arrays;
 
 /*
  * Negative numbers in an array signify an account does not exist
- * TODO Still need to make sure that backend updates all the sthuff
+ * TODO
+ * 
+ *  	THE ONE DAY LIMIT ON DEPOSIT, WITHDRAW, AND TRANSFER!!!
  */
 public class BackEnd {
 	static BufferedReader reader;
@@ -27,104 +29,29 @@ public class BackEnd {
 		oldMaster = args[1];
 		newMaster = args[2];
 		newValAccounts = args[3];
+		createText(newMaster);
+		createText(newValAccounts);
 		readMAFLine(oldMaster); // Read in the old master file to update our arrays
 		readMTSF(mtsfName); // Read in the merged transaction file
-		
+		newMAF(); // Generate our new master accounts file
+		currentAccounts(); // Generates our new valid accounts file
 	} // End main
 	
-	/**
-	 * Read in merged Transaction summary file line by line
-	 * Moves control to the redirect function after reading in a single line
-	 */
-	public static void readMTSF(String fileName){
-		BufferedReader br = null;
-		try {
-			String currentLine;
-			br = new BufferedReader(new FileReader(fileName)); // Imports
-																// MTSF file
-			while ((currentLine = br.readLine()) != null) { // takes the current
-					redirect(currentLine); // Bring it to the other function that is our road map
-			} // end while
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (br != null)
-					br.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		} // close it
-	}
-
-	// Creates an empty text file to be used as the new valid accounts list
-	public static void createText() {
-		{
-			try {
-				File file = new File(newValAccounts);
-				if (file.createNewFile()) {
-					// System.out.println("File is created!");
-				} else {
-					// System.out.println("File already exists.");
+	// Creates an empty text file 
+		public static void createText(String fileName) {
+			{
+				try {
+					File file = new File(fileName);
+					if (file.createNewFile()) {
+						// System.out.println("File is created!");
+					} else {
+						// System.out.println("File already exists.");
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
-		}
-	} // End createText
-	
-	public static void writeToFile(String sentence, String fileName){
-		BufferedWriter bw = null;
-	      try {
-	         // Put new accounts
-	         bw = new BufferedWriter(new FileWriter(fileName, true));
-	         bw.write(sentence);
-	         bw.newLine(); // newLine() used for formatting purposes, to separate each account number with a line break.
-	         // bw.flush();
-	      } catch (IOException e) {
-	    	 e.printStackTrace();
-	      } finally {                       // terminalOutput.txt
-	    	 if (bw != null) try {
-	    		bw.close();
-	    	 } catch (IOException e) {
-	    	 }
-	      }
-	} // End writeToFile
-	
-	/** 
-	 * Generates our new accounts list
-	 */
-	public static void currentAccounts(){ // will write to our accounts
-		for(int i=10000000; i < 99999999; i++){
-			if (accountBalance[i] >=0){ // ie) if there exists an account
-				writeToFile(Integer.toString(i),newValAccounts);
-			}
-		}
-	}
-	
-	/**
-	 * Generates our new Master accounts file 
-	 */
-	public static void newMAF(){
-		writeToFile("",newMaster);
-		for(int i = 10000000; i < 99999999; i++){
-			if(accountBalance[i] >=0){
-				writeToFile(createMAFLine(i,accountBalance[i],accountNameList[i]),newMaster);
-			}
-		} // Read array to make our new master account file 
-	}
-	/**
-	 * Generates our master account file line 
-	 * To be called by the method that generates the new master accounts file
-	 * @param accountN
-	 * @param balance
-	 * @param name
-	 * @return
-	 */
-	public static String createMAFLine(int accountN, int balance, String name){
-		String line = ("" + accountN + " " + balance + " " + name);
-		return line;
-	}
+		} // End createText
 	
 	/**
 	 * Goes through the master accounts file, line by line
@@ -164,12 +91,34 @@ public class BackEnd {
 		accountNameList[Integer.parseInt(tokens[0])] = tokens[2];
 	} // End mafToArray
 	
-	public static boolean checkAccount(int accountNum){
-		return false;
-	}
-
 	/**
-	 * Redirects based on the first two accounts read
+	 * Read in merged Transaction summary file line by line
+	 * Moves control to the redirect function after reading in a single line
+	 */
+	public static void readMTSF(String fileName){
+		BufferedReader br = null;
+		try {
+			String currentLine;
+			br = new BufferedReader(new FileReader(fileName)); // Imports
+																// MTSF file
+			while ((currentLine = br.readLine()) != null) { // takes the current
+					redirect(currentLine); // Bring it to the other function that is our road map
+			} // end while
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				if (br != null)
+					br.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} // close it
+	} // End reatMTSF
+	
+	/**
+	 * Redirects based on the first two accounts read 
+	 * Passes in a substring that moves to the number
 	 * @param transaction
 	 */
 	public static void redirect(String transaction) {
@@ -189,6 +138,7 @@ public class BackEnd {
 
 	/**
 	 * Handles deposit
+	 * Sets the values in our global arrays so that they can be updated at the end of the session
 	 * @param deposit
 	 * @param whichAccount
 	 * @return
@@ -208,7 +158,7 @@ public class BackEnd {
 
 	/**
 	 * Handles withdraw, looks at second account number
-	 * 
+	 * Sets the values in our global arrays so that they can be updated at the end of the session
 	 * @param withdraw
 	 */
 	public static boolean withdraw(String withdraw) {
@@ -225,7 +175,7 @@ public class BackEnd {
 
 	/**
 	 * Handles things for delete
-	 * THINK it is finished
+	 * Sets the values in our global arrays so that they can be updated at the end of the session
 	 * @param delete
 	 */
 	public static void delete(String delete) {
@@ -247,11 +197,8 @@ public class BackEnd {
 
 	/**
 	 * Handles things for transfer
-	 * 
+	 * Sets the values in our global arrays so that they can be updated at the end of the session
 	 * @param transfer
-	 *            WHAT IF deposit or withdraw doesnt work? we need to redeposit
-	 *            the money also have to implement that transfer has same
-	 *            restrictions on amount per day
 	 */
 	public static void transfer(String transfer) {
 		// Does the withdraw
@@ -268,7 +215,9 @@ public class BackEnd {
 	}// End transfer
 
 	/**
-	 * Handles things for create
+	 * Handles things for create 
+	 * Sets the values in our global arrays so that they can be updated at the end of the session
+	 * Error checks for if the account already exists. 
 	 * @param create
 	 */
 	public static void create(String create) {
@@ -283,9 +232,10 @@ public class BackEnd {
 			accountNameList[tsfArray[0]] = tokens[3];
 		}
 	}// End create
-
+	
 	/** 
-	 * Converts our strings into integer values in an array
+	 * Converts our strings into integer values in an array 
+	 * Array is returned and the array is used in the transactions
 	 * @param transactionLine
 	 * @return
 	 */
@@ -300,6 +250,67 @@ public class BackEnd {
 		// Amount in cents
 		transactionValues[2] = Integer.parseInt(tokens[2]);
 		return transactionValues;
-	}
+	} // End str2Data
 	
+	/**
+	 * writeToFile is used to write to our exisiting .txt file
+	 * Which file is determined by the argument fileName that is passed in
+	 * @param sentence
+	 * @param fileName
+	 */
+	public static void writeToFile(String sentence, String fileName){
+		BufferedWriter bw = null;
+	      try {
+	         // Put new accounts
+	         bw = new BufferedWriter(new FileWriter(fileName, true));
+	         bw.write(sentence);
+	         bw.newLine(); // newLine() used for formatting purposes, to separate each account number with a line break.
+	         // bw.flush();
+	      } catch (IOException e) {
+	    	 e.printStackTrace();
+	      } finally {            
+	    	 if (bw != null) try {
+	    		bw.close();
+	    	 } catch (IOException e) {
+	    	 }
+	      }
+	} // End writeToFile
+	
+	/** 
+	 * Generates our new accounts list
+	 * Goes through our array
+	 * For every index that has a balance >= 0
+	 * writes that index (which is equivalent to the account number) to our text file
+	 */
+	public static void currentAccounts(){
+		for(int i=10000000; i < 99999999; i++){
+			if (accountBalance[i] >=0) // ie) if there exists an account
+				writeToFile(Integer.toString(i),newValAccounts);
+		}
+	} // End currentAccounts
+	
+	/**
+	 * Generates our new Master accounts file 
+	 * Like the currentAccounts method, goes through the entire array.
+	 */
+	public static void newMAF(){
+		writeToFile("",newMaster);
+		for(int i = 10000000; i < 99999999; i++){
+			if(accountBalance[i] >=0)
+				writeToFile(createMAFLine(i,accountBalance[i],accountNameList[i]),newMaster);
+		} // Read array to make our new master account file 
+	} // End newMAF
+	
+	/**
+	 * Generates our master account file line 
+	 * To be called by the method that generates the new master accounts file
+	 * @param accountN
+	 * @param balance
+	 * @param name
+	 * @return
+	 */
+	public static String createMAFLine(int accountN, int balance, String name){
+		String line = ("" + accountN + " " + balance + " " + name);
+		return line;
+	} // End createMAFLine
 }// End BackEnd
