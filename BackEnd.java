@@ -4,8 +4,6 @@ import java.util.Arrays;
 /*
  * Negative numbers in an array signify an account does not exist
  * TODO
- * 
- *  	THE ONE DAY LIMIT ON DEPOSIT, WITHDRAW, AND TRANSFER!!!
  */
 public class BackEnd {
 	static BufferedReader reader;
