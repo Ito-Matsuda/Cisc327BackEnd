@@ -19,10 +19,6 @@ public class BackEnd {
 	private static String newValAccounts;
 	
 	public static void main(String[] args) {
-		// Make it so that all arrays have a -1? does this even work
-		// Should not initialize it here or else everytime we run the program it
-		// becomes negative ones
-		// DANGEROUS FILLING IT HERE???
 		Arrays.fill(accountBalance, -1);
 		// Update our global variables
 		mtsfName = args[0];
@@ -31,6 +27,7 @@ public class BackEnd {
 		newValAccounts = args[3];
 		createText(newMaster);
 		createText(newValAccounts);
+		writeToFile("00000000",newValAccounts); // Write the top part has to be 8 zeros
 		readMAFLine(oldMaster); // Read in the old master file to update our arrays
 		readMTSF(mtsfName); // Read in the merged transaction file
 		newMAF(); // Generate our new master accounts file
