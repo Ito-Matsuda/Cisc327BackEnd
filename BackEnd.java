@@ -4,6 +4,8 @@ import java.util.Arrays;
 /*
  * Negative numbers in an array signify an account does not exist
  * TODO
+ * 
+ *  	THE ONE DAY LIMIT ON DEPOSIT, WITHDRAW, AND TRANSFER!!!
  */
 public class BackEnd {
 	static BufferedReader reader;
@@ -25,11 +27,11 @@ public class BackEnd {
 		newValAccounts = args[3];
 		createText(newMaster);
 		createText(newValAccounts);
-		writeToFile("00000000",newValAccounts); // Write the top part has to be 8 zeros
 		readMAFLine(oldMaster); // Read in the old master file to update our arrays
 		readMTSF(mtsfName); // Read in the merged transaction file
 		newMAF(); // Generate our new master accounts file
 		currentAccounts(); // Generates our new valid accounts file
+		System.exit(0);
 	} // End main
 	
 	// Creates an empty text file 
@@ -117,17 +119,19 @@ public class BackEnd {
 	 * @param transaction
 	 */
 	public static void redirect(String transaction) {
-		if (transaction.substring(0, 1).equals("DE")) {
-			deposit(transaction.substring(3), 0); // begin from the number not
-													// the space
-		} else if (transaction.substring(0, 1).equals("WD")) {
+		if (transaction.substring(0, 2).equals("DE")) {
+			deposit(transaction.substring(3),0); // begin from the number not the space
+		} else if (transaction.substring(0, 2).equals("WD")) {
 			withdraw(transaction.substring(3));
-		} else if (transaction.substring(0, 1).equals("DL")) {
+		} else if (transaction.substring(0, 2).equals("DL")) {
 			delete(transaction.substring(3));
-		} else if (transaction.substring(0, 1).equals("TR")) {
+		} else if (transaction.substring(0, 2).equals("TR")) {
 			transfer(transaction.substring(3));
-		} else if (transaction.substring(0, 1).equals("CR")) {
+		} else if (transaction.substring(0, 2).equals("CR")) {
 			create(transaction.substring(3));
+		}
+		else if(transaction.substring(0,2).equals("ES")){
+			//Nothing really happens
 		}
 	} // End redirect
 
@@ -142,10 +146,14 @@ public class BackEnd {
 		// Turns values from TSF line into integers
 		int tsfArray[] = str2Data(deposit);
 		// Check to see if the deposit would go over the limit
-		if (tsfArray[whichAccount] + tsfArray[2] > 99999999) {
+		if (accountBalance[tsfArray[whichAccount]] + tsfArray[2] > 99999999) {
 			System.out.println("Error, deposit exceeds account balance limit (999999.99)");
 			return false;
-		} else { // Deposit the money
+		} else if (accountBalance[tsfArray[0]] == -1){ //If the account does not exist
+			System.out.println("Error, cannot deposit to an account that does not exist.");
+			return false;
+		} 
+		else { // Deposit the money
 			accountBalance[tsfArray[whichAccount]] = accountBalance[tsfArray[whichAccount]] + tsfArray[2];
 			return true;
 		}
@@ -159,11 +167,17 @@ public class BackEnd {
 	public static boolean withdraw(String withdraw) {
 		int tsfArray[] = str2Data(withdraw);
 		// If withdrawing the money would leave you at something less than 0
-		if (tsfArray[1] - tsfArray[2] < 0) {
-			System.out.println("Error, cannot withdraw more than balance " + tsfArray[0]);
+		if (accountBalance[tsfArray[0]] == -1){ //If the account does not exist
+			System.out.println("Error, cannot withdraw from an account that does not exist.");
 			return false;
-		} else { // Withdraw the money
+		}
+		else if (accountBalance[tsfArray[1]] - tsfArray[2] < 0) {
+			System.out.println("Error, cannot withdraw more than balance of " + accountBalance[tsfArray[0]]);
+			return false;
+		} 
+		else { // Withdraw the money
 			accountBalance[tsfArray[1]] = accountBalance[tsfArray[1]] - tsfArray[2];
+			System.out.println("Withdraw Successful");
 			return true;
 		}
 	} // End withdraw
@@ -177,12 +191,12 @@ public class BackEnd {
 		int values[] = str2Data(delete);
 		String[] tokens = delete.split(" ");
 		if (tokens[3].equals(accountNameList[values[0]])){
-			if (values[0] > 0) { // If the account has money it in it
+			if (accountBalance[values[0]] > 0) { // If the account has money it in it
 				System.out.println("Error, cannot delete an account that has money in it " + values[0]);
-			} else if (values[0] == -1) { // If it does not exist
+			} else if (accountBalance[values[0]] == -1) { // If it does not exist
 				System.out.println("Error, the selected account does not exist");
 			} else {
-				values[0] = -1; // Delete the account
+				accountBalance[values[0]] = -1; // Delete the account
 			}
 		} // End good account name
 		else{
@@ -259,7 +273,7 @@ public class BackEnd {
 	         // Put new accounts
 	         bw = new BufferedWriter(new FileWriter(fileName, true));
 	         bw.write(sentence);
-	         bw.newLine(); // newLine() used for formatting purposes, to separate each account number with a line break.
+	         //bw.newLine(); // newLine() used for formatting purposes, to separate each account number with a line break.
 	         // bw.flush();
 	      } catch (IOException e) {
 	    	 e.printStackTrace();
@@ -279,9 +293,12 @@ public class BackEnd {
 	 */
 	public static void currentAccounts(){
 		for(int i=10000000; i < 99999999; i++){
-			if (accountBalance[i] >=0) // ie) if there exists an account
+			if (accountBalance[i] >=0){ // ie) if there exists an account
 				writeToFile(Integer.toString(i),newValAccounts);
+				writeToFile("\n",newValAccounts);
+			}
 		}
+		writeToFile("00000000",newValAccounts); // Write the bottom part has to be 8 zeros
 	} // End currentAccounts
 	
 	/**
@@ -291,9 +308,11 @@ public class BackEnd {
 	public static void newMAF(){
 		writeToFile("",newMaster);
 		for(int i = 10000000; i < 99999999; i++){
-			if(accountBalance[i] >=0)
+			if(accountBalance[i] >=0){
 				writeToFile(createMAFLine(i,accountBalance[i],accountNameList[i]),newMaster);
-		} // Read array to make our new master account file 
+				writeToFile("\n", newMaster);
+			}
+		}// Read array to make our new master account file 
 	} // End newMAF
 	
 	/**
